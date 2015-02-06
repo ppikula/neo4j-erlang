@@ -15,7 +15,7 @@ This readme and all comments throughout the code have been updated to reflect th
 - Implements all of Neo4J 2.0.0's REST API as referenced [here](http://docs.neo4j.org/chunked/stable/rest-api.html) with one caveat:
  - Does *not* implement [streaming API](http://docs.neo4j.org/chunked/stable/rest-api-streaming.html)
 - Uses [jiffy](https://github.com/davisp/jiffy) for JSON
-- Uses [hackney](https://github.com/benoitc/hackney) for http queries
+- Uses [lhttpc](https://github.com/talko/lhttpc) for http queries
  - Does *not* support HTTPS (yet?)
 
 ## How?

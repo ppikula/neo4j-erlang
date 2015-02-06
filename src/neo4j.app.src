@@ -4,7 +4,7 @@
   , {registered, []}
   , {applications, [ kernel
                    , stdlib
-                   , hackney
+                   , lhttpc
                    , jiffy
                    ]}
   , {env, []}
