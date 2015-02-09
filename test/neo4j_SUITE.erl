@@ -920,12 +920,15 @@ lkup(What, {List}) ->
 lkup(What, List) ->
   proplists:get_value(What, List).
 
+% unicode_char() ->
+%   case crypto:rand_uniform(0, 3) of
+%     0 -> crypto:rand_uniform(0, 16#ff);
+%     1 -> crypto:rand_uniform(16#300, 16#2000);
+%     2 -> crypto:rand_uniform(16#20d0, 16#2100)
+%   end.
+
 unicode_char() ->
-  case crypto:rand_uniform(0, 3) of
-    0 -> crypto:rand_uniform(0, 16#ff);
-    1 -> crypto:rand_uniform(16#300, 16#2000);
-    2 -> crypto:rand_uniform(16#20d0, 16#2100)
-  end.
+ crypto:rand_uniform(70,90).
 
 unicode_string() ->
   Length = crypto:rand_uniform(1, 101),
