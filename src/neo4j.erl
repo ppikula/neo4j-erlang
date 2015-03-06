@@ -130,12 +130,15 @@
         , remove_relationship_auto_index_property/2
         ]).
 
+-export_type([neo4j_root/0, neo4j_node/0, neo4j_relationship/0,
+              cypher_result/0, neo4j_id/0, neo4j_json_properties/0]).
+
 %%_* Defines ===================================================================
 
 -type neo4j_root() :: proplists:proplist().
 -type neo4j_node() :: proplists:proplist().
 -type neo4j_relationship() :: proplists:proplist().
--type cypher_result() :: proplists:proplist().
+-type cypher_result() :: {proplists:proplist()}.
 -type neo4j_id() :: proplists:proplist().
 -type neo4j_index() :: proplists:proplist().
 -type neo4j_transaction() :: proplists:proplist().
@@ -143,7 +146,7 @@
                                    | {Query::binary(), Parameters::binary()}
                                    | {Query :: binary(), Parameters :: binary(), DataFormats::[binary()]}
                                    ].
-
+-type neo4j_json_properties() :: {proplists:proplist()}.
 -type neo4j_type() :: proplists:proplist().
 
 
@@ -328,7 +331,7 @@ cypher(Neo, Query) ->
 %%
 %% http://docs.neo4j.org/chunked/stable/rest-api-cypher.html#rest-api-send-queries-with-parameters
 %%
--spec cypher(neo4j_root(), binary(), proplists:proplist()) -> cypher_result() | {error, term()}.
+-spec cypher(neo4j_root(), binary(), neo4j_json_properties()) -> cypher_result() | {error, term()}.
 cypher(Neo, Query, Params) ->
   {_, URI} = find(<<"cypher">>, 1, Neo),
   Payload = jiffy:encode({[{query, Query}, {params, Params}]}),
@@ -395,7 +398,7 @@ get_node_properties(Node) ->
 %% http://docs.neo4j.org/chunked/stable/rest-api-node-properties.html#rest-api-update-node-properties
 %%
 -spec set_node_properties( neo4j_node()
-                         , proplist:proplist()) -> ok | {error, term()}.
+                         , neo4j_json_properties()) -> ok | {error, term()}.
 set_node_properties(Node, Props) ->
   {_, URI} = find(<<"properties">>, 1, Node),
   update(URI, jiffy:encode(Props)).
@@ -639,7 +642,7 @@ delete_relationship_property(_, _) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-indexes.html#rest-api-create-index
 %%
--spec create_index(neo4j_root(), binary(), [binary()]) -> propliststs:proplist() | {error, term()}.
+-spec create_index(neo4j_root(), binary(), [binary()]) -> proplists:proplist() | {error, term()}.
 create_index(Neo, Label, PropKeys) ->
   {_, URI} = find(<<"index">>, 1, Neo),
   Payload = jiffy:encode({[{<<"property_keys">>, PropKeys}]}),
@@ -648,7 +651,7 @@ create_index(Neo, Label, PropKeys) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-indexes.html#rest-api-drop-index
 %%
--spec drop_index(neo4j_root(), binary(), binary()) -> propliststs:proplist() | {error, term()}.
+-spec drop_index(neo4j_root(), binary(), binary()) -> proplists:proplist() | {error, term()}.
 drop_index(Neo, Label, Key) ->
   {_, URI} = find(<<"index">>, 1, Neo),
   delete(<<URI/binary, "/", Label/binary, "/", Key/binary>>).
@@ -656,7 +659,7 @@ drop_index(Neo, Label, Key) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-indexes.html#rest-api-list-indexes-for-a-label
 %%
--spec list_indexes(neo4j_root(), binary()) -> propliststs:proplist() | {error, term()}.
+-spec list_indexes(neo4j_root(), binary()) -> proplists:proplist() | {error, term()}.
 list_indexes(Neo, Label) ->
   {_, URI} = find(<<"index">>, 1, Neo),
   retrieve(<<URI/binary, "/", Label/binary>>).
@@ -666,7 +669,7 @@ list_indexes(Neo, Label) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-constraints.html#rest-api-create-uniqueness-constraint
 %%
--spec create_constraint(neo4j_root(), binary(), [binary()]) -> propliststs:proplist() | {error, term()}.
+-spec create_constraint(neo4j_root(), binary(), [binary()]) -> proplists:proplist() | {error, term()}.
 create_constraint(Neo, Label, PropKeys) ->
   {_, URI} = find(<<"constraint">>, 1, Neo),
   Payload = jiffy:encode({[{<<"property_keys">>, PropKeys}]}),
@@ -675,7 +678,7 @@ create_constraint(Neo, Label, PropKeys) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-constraints.html#rest-api-get-a-specific-uniqueness-constraint
 %%
--spec get_constraint(neo4j_root(), binary(), binary()) -> propliststs:proplist() | {error, term()}.
+-spec get_constraint(neo4j_root(), binary(), binary()) -> proplists:proplist() | {error, term()}.
 get_constraint(Neo, Label, PropKey) ->
   {_, URI} = find(<<"constraint">>, 1, Neo),
   retrieve(<<URI/binary, "/", Label/binary, "/uniqueness/", PropKey/binary>>).
@@ -684,7 +687,7 @@ get_constraint(Neo, Label, PropKey) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-constraints.html#rest-api-get-all-uniqueness-constraints-for-a-label
 %%
--spec get_uniqueness_constraints(neo4j_root(), binary()) -> propliststs:proplist() | {error, term()}.
+-spec get_uniqueness_constraints(neo4j_root(), binary()) -> proplists:proplist() | {error, term()}.
 get_uniqueness_constraints(Neo, Label) ->
   {_, URI} = find(<<"constraint">>, 1, Neo),
   retrieve(<<URI/binary, "/", Label/binary, "/uniqueness">>).
@@ -693,7 +696,7 @@ get_uniqueness_constraints(Neo, Label) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-constraints.html#rest-api-get-all-constraints-for-a-label
 %%
--spec get_label_constraints(neo4j_root(), binary()) -> propliststs:proplist() | {error, term()}.
+-spec get_label_constraints(neo4j_root(), binary()) -> proplists:proplist() | {error, term()}.
 get_label_constraints(Neo, Label) ->
   {_, URI} = find(<<"constraint">>, 1, Neo),
   retrieve(<<URI/binary, "/", Label/binary>>).
@@ -702,7 +705,7 @@ get_label_constraints(Neo, Label) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-constraints.html#rest-api-get-all-constraints
 %%
--spec get_constraints(neo4j_root()) -> propliststs:proplist() | {error, term()}.
+-spec get_constraints(neo4j_root()) -> proplists:proplist() | {error, term()}.
 get_constraints(Neo) ->
   {_, URI} = find(<<"constraint">>, 1, Neo),
   retrieve(URI).
@@ -711,7 +714,7 @@ get_constraints(Neo) ->
 %%
 %% @doc http://docs.neo4j.org/chunked/milestone/rest-api-schema-constraints.html#rest-api-drop-constraint
 %%
--spec drop_constraint(neo4j_root(), binary(), binary()) -> propliststs:proplist() | {error, term()}.
+-spec drop_constraint(neo4j_root(), binary(), binary()) -> proplists:proplist() | {error, term()}.
 drop_constraint(Neo, Label, PropKey) ->
   {_, URI} = find(<<"constraint">>, 1, Neo),
   delete(<<URI/binary, "/", Label/binary, "/uniqueness/", PropKey/binary>>).
