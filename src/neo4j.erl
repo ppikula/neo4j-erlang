@@ -1582,7 +1582,7 @@ headers() ->
   ].
 
 lhttpc_options() ->
-    [{pool, get_pool_name(erlang:phash2(self(), 8))}].
+    [{pool, get_pool_name(erlang:phash2({self(), os:timestamp()}, 8))}].
 
 get_pool_name(0) -> pool0;
 get_pool_name(1) -> pool1;
