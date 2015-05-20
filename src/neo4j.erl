@@ -156,6 +156,7 @@ connect([]) ->
   {error, base_uri_not_specified};
 connect(Options) ->
   _ = start_app(lhttpc),
+  [lhttpc:add_pool(get_pool_name(P)) || P <- lists:seq(0,7)],
   case find(base_uri, 1, Options) of
     {_, BaseURI} -> get_root(BaseURI);
     _            -> {error, base_uri_not_specified}
@@ -1326,7 +1327,7 @@ remove_relationship_auto_index_property(Neo, Property) ->
 -spec get_root(binary()) -> neo4j_root() | {error, term()}.
 get_root(BaseURI) when is_list(BaseURI)   -> get_root(list_to_binary(BaseURI));
 get_root(BaseURI) when is_binary(BaseURI) ->
-  case lhttpc:request(binary_to_list(BaseURI), 'GET', headers(),?HTTP_TIMEOUT) of
+  case lhttpc:request(binary_to_list(BaseURI), 'GET', headers(), [],?HTTP_TIMEOUT, lhttpc_options()) of
     {error, Reason} -> {error, Reason};
     {ok, {{StatusCode,_}, _, Body}} when StatusCode /= 200 ->
       {error, {non_200_response, StatusCode, Body}};
@@ -1348,7 +1349,7 @@ get_root(BaseURI) when is_binary(BaseURI) ->
 
 -spec create(binary()) -> neo4j_type() | binary() | [term()] | {error, term()}.
 create(URI) ->
-  case lhttpc:request(binary_to_list(URI), 'POST', headers(),?HTTP_TIMEOUT) of
+    case lhttpc:request(binary_to_list(URI), 'POST', headers(), [], ?HTTP_TIMEOUT, lhttpc_options()) of
     {error, Reason} -> {error, Reason};
     {ok, {{200, _}, _, Body}} ->
       jiffy:decode(Body);
@@ -1367,7 +1368,7 @@ create(URI) ->
 
 -spec create(binary(), binary()) -> neo4j_type() | binary() | [term()] | {error, term()}.
 create(URI, Payload) ->
-  case lhttpc:request(binary_to_list(URI), 'POST', headers(), Payload, ?HTTP_TIMEOUT) of
+  case lhttpc:request(binary_to_list(URI), 'POST', headers(), Payload, ?HTTP_TIMEOUT, lhttpc_options()) of
     {error, Reason} -> {error, Reason};
     {ok, {{200,_}, _, Body}} ->
       jiffy:decode(Body);
@@ -1386,7 +1387,7 @@ create(URI, Payload) ->
 
 -spec retrieve(binary()) -> neo4j_type() | binary() | [term()] | {error, term()}.
 retrieve(URI) ->
-  case lhttpc:request(binary_to_list(URI), 'GET', headers(), ?HTTP_TIMEOUT) of
+  case lhttpc:request(binary_to_list(URI), 'GET', headers(), [], ?HTTP_TIMEOUT, lhttpc_options()) of
     {error, Reason} -> {error, Reason};
     {ok, {{404,_}, _, _}} ->
       {error, not_found};
@@ -1400,7 +1401,7 @@ retrieve(URI) ->
 
 -spec update(binary(), binary()) -> ok | {error, term()}.
 update(URI, Payload) ->
-  case lhttpc:request(binary_to_list(URI), 'PUT', headers(), Payload, ?HTTP_TIMEOUT) of
+    case lhttpc:request(binary_to_list(URI), 'PUT', headers(), Payload, ?HTTP_TIMEOUT, lhttpc_options()) of
     {error, Reason} -> {error, Reason};
     {ok, {{204,_}, _, _}} ->
       ok;
@@ -1410,7 +1411,7 @@ update(URI, Payload) ->
 
 -spec delete(binary()) -> ok | {error, term()}.
 delete(URI) ->
-  case lhttpc:request(binary_to_list(URI), 'DELETE', headers(), ?HTTP_TIMEOUT) of
+  case lhttpc:request(binary_to_list(URI), 'DELETE', headers(), [], ?HTTP_TIMEOUT, lhttpc_options()) of
     {error, Reason} -> {error, Reason};
     {ok, {{204,_}, _, _}} ->
       ok;
@@ -1579,6 +1580,18 @@ headers() ->
   [ {<<"Accept">>, <<"application/json; charset=UTF-8">>}
   , {<<"Content-Type">>, <<"application/json">>}
   ].
+
+lhttpc_options() ->
+    [{pool, get_pool_name(erlang:phash2(self(), 8))}].
+
+get_pool_name(0) -> pool0;
+get_pool_name(1) -> pool1;
+get_pool_name(2) -> pool2;
+get_pool_name(3) -> pool3;
+get_pool_name(4) -> pool4;
+get_pool_name(5) -> pool5;
+get_pool_name(6) -> pool6;
+get_pool_name(7) -> pool7.
 
 
 find(Key, Pos, {L}) when is_list(L) ->
